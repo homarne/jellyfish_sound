@@ -79,12 +79,17 @@ AudioControlSGTL5000     sgtl5000_1;     //xy=202,189
 #define SIG_LEVEL_MAX 96
 #define SIG_LEVEL_RANGE SIG_LEVEL_MAX - SIG_LEVEL_MIN
 
-//#define MODE_MOON
-#define MODE_JELLY
+#define MODE_MOON
+//#define MODE_JELLY
 
 int theme_step = 0;
 int ambient_step = 0;
 int radio_step = 0;
+
+#define AMBIENT 0
+#define RADIO 1
+#define THEME 2
+int background_state = AMBIENT;
 
 const int TIMES_TO_BACKGROUND = 3;
 int background_count = TIMES_TO_BACKGROUND;
@@ -259,32 +264,43 @@ void loop() {
     case BACKGROUND:
       sgtl5000_1.volume(0.75);
       int play_status;
-      
-      play_status = playFileInterruptable(moon_ambient[ambient_step]);
-      //playFileInterruptable(moon_ambient[ambient_step]);
-      ambient_step++;
-      if (ambient_step >= 12) {
-        ambient_step = 0;
+
+      switch (background_state){
+        case AMBIENT:
+          play_status = playFileInterruptable(moon_ambient[ambient_step]);
+          //playTalkFile(moon_ambient[ambient_step]);
+          //playFileInterruptable(moon_ambient[ambient_step]);
+          ambient_step++;
+          if (ambient_step >= 12) {
+            ambient_step = 0;
+          }
+          background_state = RADIO;
+          break;
+
+        case RADIO:
+          play_status = playFileInterruptable(radio[radio_step]);
+          radio_step++;
+          if (radio_step >= 8) {
+            radio_step = 0;
+          }
+          background_state = THEME;
+          break;
+
+        case THEME:
+          play_status = playFileInterruptable(theme[theme_step]);
+          theme_step++;
+          if (theme_step >= 13) {
+            theme_step = 0;
+          }
+          background_state = AMBIENT;
+          break;
       }
-
-//      play_status = playFileInterruptable(theme[theme_step]);
-//      theme_step++;
-//      if (theme_step >= 13) {
-//        theme_step = 0;
-//      }
       
-//      play_status = playFileInterruptable(radio[radio_step]);
-//      radio_step++;
-//      if (radio_step >= 8) {
-//        radio_step = 0;
-//      }
-
 //      play_status = playFileInterruptable(jelly_talk[talk_step]);
 //      talk_step++;
 //      if (talk_step >= 20) {
 //        talk_step = 0;
 //      }
-      
       
       if (play_status == 1) {;
         listen_timeout = millis() + LISTEN_WAIT_TIME;
